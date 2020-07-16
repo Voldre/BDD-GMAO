@@ -1,0 +1,22 @@
+-- Nb DI prise en compte en >24h par ArianeGroup en 2020
+  -- Compte pas les DI refusées, compte écart creation DI-OT >30j
+SELECT COUNT(*)
+            FROM CSWO_MR MR         
+               INNER JOIN CSWO_WO WO
+               ON MR.WO_ID = WO.ID
+
+               INNER JOIN CSSY_ACTOR ACTOR
+               ON MR.ADDRESSEE_ID = ACTOR.ID
+               WHERE ACTOR.CODE in ('VER_MAINT_F_01')
+           AND CREATEDATE > {startOfYear}
+           AND CREATIONDATE < {endOfYear}
+AND ( 
+( GET_DAYOFYEAR(CREATEDATE)- GET_DAYOFYEAR(CREATIONDATE) >1 
+AND GET_DAYOFWEEK(CREATEDATE)-GET_DAYOFWEEK(CREATIONDATE)>=0 )
+OR        
+( GET_DAYOFYEAR(CREATEDATE)- GET_DAYOFYEAR(CREATIONDATE) =1 
+AND GET_HOUR(CREATEDATE) - GET_HOUR(CREATIONDATE) > 0 )
+OR -- DI tolérées, car pile 24h (DAY = 1, HOUR = 0), donc >0
+( GET_DAYOFWEEK(CREATEDATE)-GET_DAYOFWEEK(CREATIONDATE) <0 
+AND GET_DAYOFYEAR(CREATEDATE)-GET_DAYOFYEAR(CREATIONDATE)>=3 ) 
+    )
